@@ -64,13 +64,11 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           files: reports/coverage.xml
-          fail_ci_if_error: true
-
+          report_type: coverage
+          
       - name: Upload test results to Codecov
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           files: reports/test.xml
-          fail_ci_if_error: true
+          report_type: test_results
