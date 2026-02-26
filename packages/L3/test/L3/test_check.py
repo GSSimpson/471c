@@ -17,20 +17,33 @@ from L3.syntax import (
 )
 
 
-def test_check_term_let():
-    term = Let(
-        bindings=[
-            ("x", Immediate(value=0)),
-        ],
-        body=Reference(name="x"),
-    )
+# Program
+def test_check_program():
+    program = Program(parameters=["param1", "param2"], body=Immediate(value=0))
+    check_program(program)
 
-    context: Context = {}
 
+def test_check_program_duplicate_params():
+    program = Program(parameters=["param1", "param1"], body=Immediate(value=0))
+    with pytest.raises(ValueError):
+        check_program(program)
+
+
+# Let
+def test_check_let():
+    term = Let(bindings=[("term", Immediate(value=1))], body=Reference(name="term2"))
+    context: Context = {"term2": None}
     check_term(term, context)
 
 
-def test_check_term_let_scope():
+def test_check_let_duplicate_bindings():
+    term = Let(bindings=[("term", Immediate(value=1)), ("term", Immediate(value=1))], body=Reference(name="term2"))
+    context: Context = {"term2": None}
+    with pytest.raises(ValueError):
+        check_term(term, context)
+
+
+def test_check_let_scope():
     term = Let(
         bindings=[
             ("x", Immediate(value=0)),
@@ -38,219 +51,133 @@ def test_check_term_let_scope():
         ],
         body=Reference(name="y"),
     )
-
     context: Context = {}
-
     with pytest.raises(ValueError):
         check_term(term, context)
 
 
-def test_check_term_let_duplicate_binders():
+# LetRec
+def test_check_letrec():
+    term = LetRec(bindings=[("term", Immediate(value=1))], body=Reference(name="term"))
+    context: Context = {"term": None}
+    check_term(term, context)
+
+
+def test_check_letrec_duplicate_bindings():
+    term = LetRec(bindings=[("term", Immediate(value=1)), ("term", Immediate(value=1))], body=Reference(name="term"))
+    context: Context = {"term": None}
+    with pytest.raises(ValueError):
+        check_term(term, context)
+
+
+def test_check_letrec_scope():
     term = Let(
         bindings=[
             ("x", Immediate(value=0)),
-            ("x", Immediate(value=1)),
-        ],
-        body=Reference(name="x"),
-    )
-
-    context: Context = {}
-
-    with pytest.raises(ValueError):
-        check_term(term, context)
-
-
-def test_check_term_letrec():
-    term = LetRec(
-        bindings=[
-            ("x", Immediate(value=0)),
-        ],
-        body=Reference(name="x"),
-    )
-
-    context: Context = {}
-
-    check_term(term, context)
-
-
-def test_check_term_letrec_scope():
-    term = LetRec(
-        bindings=[
             ("y", Reference(name="x")),
-            ("x", Immediate(value=0)),
         ],
-        body=Reference(name="x"),
+        body=Reference(name="y"),
     )
-
     context: Context = {}
+    with pytest.raises(ValueError):
+        check_term(term, context)
 
+
+# Reference
+def test_check_reference():
+    term = Reference(name="name")
+    context: Context = {"name": None}
     check_term(term, context)
 
 
-def test_check_term_letrec_duplicate_binders():
-    term = LetRec(
-        bindings=[
-            ("x", Immediate(value=0)),
-            ("x", Immediate(value=1)),
-        ],
-        body=Reference(name="x"),
-    )
-
+def test_check_reference_no_binding():
+    term = Reference(name="name")
     context: Context = {}
 
     with pytest.raises(ValueError):
         check_term(term, context)
 
 
-def test_check_term_reference_bound():
-    term = Reference(name="x")
-
-    context: Context = {
-        "x": None,
-    }
-
+# Abstract
+def test_check_abstract():
+    term = Abstract(parameters=["a", "b"], body=Reference(name="x"))
+    context: Context = {"x": None}
     check_term(term, context)
 
 
-def test_check_term_reference_free():
-    term = Reference(name="x")
-
-    context: Context = {}
+def test_check_abstract_duplicates():
+    term = Abstract(parameters=["a", "a"], body=Reference(name="x"))
+    context: Context = {"x": None}
 
     with pytest.raises(ValueError):
         check_term(term, context)
 
 
-def test_check_term_abstract():
-    term = Abstract(
-        parameters=["x"],
-        body=Immediate(value=0),
-    )
-
-    context: Context = {}
-
+# Apply
+def test_check_apply_empty_args():
+    term = Apply(target=Reference(name="target"), arguments=[])
+    context: Context = {"target": None}
     check_term(term, context)
 
 
-def test_check_term_abstract_duplicate_parameters():
-    term = Abstract(
-        parameters=["x", "x"],
-        body=Immediate(value=0),
-    )
+def test_check_apply_one_arg():
+    term = Apply(target=Immediate(value=1), arguments=[])
 
     context: Context = {}
-
-    with pytest.raises(ValueError):
-        check_term(term, context)
-
-
-def test_check_term_apply():
-    term = Apply(
-        target=Reference(name="x"),
-        arguments=[Immediate(value=0)],
-    )
-
-    context: Context = {
-        "x": None,
-    }
-
     check_term(term, context)
 
 
-def test_check_term_immediate():
+# Immediate
+def test_check_immediate():
     term = Immediate(value=0)
-
     context: Context = {}
-
     check_term(term, context)
 
 
-def test_check_term_primitive():
-    term = Primitive(
-        operator="+",
-        left=Immediate(value=1),
-        right=Immediate(value=2),
-    )
-
+# Primitive
+def test_check_primitive_add():
+    term = Primitive(operator="+", left=Immediate(value=0), right=Immediate(value=1))
     context: Context = {}
-
     check_term(term, context)
 
 
-def test_check_term_branch():
+# Branch
+def test_check_branch_LT():
     term = Branch(
         operator="<",
-        left=Immediate(value=1),
-        right=Immediate(value=2),
-        consequent=Immediate(value=0),
-        otherwise=Immediate(value=1),
+        left=Immediate(value=0),
+        right=Immediate(value=1),
+        consequent=Immediate(value=3),
+        otherwise=Immediate(value=4),
     )
 
     context: Context = {}
-
     check_term(term, context)
 
 
-def test_check_term_allocate():
+# Allocate
+def test_check_allocate():
     term = Allocate(count=0)
-
     context: Context = {}
-
     check_term(term, context)
 
 
-def test_check_term_load():
-    term = Load(
-        base=Reference(name="x"),
-        index=0,
-    )
-
-    context: Context = {
-        "x": None,
-    }
-
-    check_term(term, context)
-
-
-def test_check_term_store():
-    term = Store(
-        base=Reference(name="x"),
-        index=0,
-        value=Immediate(value=0),
-    )
-
-    context: Context = {
-        "x": None,
-    }
-
-    check_term(term, context)
-
-
-def test_check_term_begin():
-    term = Begin(
-        effects=[Immediate(value=0)],
-        value=Immediate(value=0),
-    )
-
+# Load
+def test_check_load():
+    term = Load(base=Immediate(value=0), index=0)
     context: Context = {}
-
     check_term(term, context)
 
 
-def test_check_program():
-    program = Program(
-        parameters=[],
-        body=Immediate(value=0),
-    )
-
-    check_program(program)
+# Store
+def test_check_store():
+    term = Store(base=Immediate(value=0), index=0, value=Immediate(value=1))
+    context: Context = {}
+    check_term(term, context)
 
 
-def test_check_program_duplicate_parameters():
-    program = Program(
-        parameters=["x", "x"],
-        body=Immediate(value=0),
-    )
-
-    with pytest.raises(ValueError):
-        check_program(program)
+# Begin
+def test_check_begin():
+    term = Begin(effects=[Immediate(value=0)], value=Immediate(value=1))
+    context: Context = {}
+    check_term(term, context)
