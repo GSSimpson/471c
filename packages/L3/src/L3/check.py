@@ -41,7 +41,6 @@ def check_term(
             local = dict.fromkeys([name for name, _ in bindings])
             recur(body, context={**context, **local})
 
-
         case LetRec(bindings=bindings, body=body):
             counts = Counter(name for name, _ in bindings)
             duplicates = {name: count for name, count in counts.items() if count > 1}
@@ -54,11 +53,11 @@ def check_term(
                 recur(value, context={**context, **local})
             check_term(body, {**context, **local})
 
-
-
         case Reference(name=name):
             if name not in context:
                 raise ValueError(f"unknown variable: {name}")
+        #            if name not in context:
+        #                raise ValueError(f"unknown variable: {name}")
 
         case Abstract(parameters=parameters, body=body):
             counts = Counter(parameters)
@@ -67,7 +66,6 @@ def check_term(
                 raise ValueError(f"duplicate parameters: {duplicates}")
             local = dict.fromkeys(parameters, None)
             recur(body, context={**context, **local})
-
 
         case Apply(target=target, arguments=arguments):
             recur(target)
