@@ -31,56 +31,34 @@ def check_term(
 
     match term:
         case Let(bindings=bindings, body=body):
-            counts = Counter(name for name, expression in bindings)
+            counts = Counter(name for name, _ in bindings)
             duplicates = {name: count for name, count in counts.items() if count > 1}
             if duplicates:
                 raise ValueError(f"duplicate bindings: {duplicates}")
-            for expression, value in bindings:
+            for _, value in bindings:
                 recur(value)
 
-            local = dict.fromkeys([name for name, expression in bindings])
+            local = dict.fromkeys([name for name, _ in bindings])
             recur(body, context={**context, **local})
 
-        #            counts = Counter(name for name, _ in bindings)
-        #           duplicates = {name: count for name, count in counts.items() if count > 1}
-        #            if duplicates:
-        #                raise ValueError(f"duplicate binders: {duplicates}")
-        #
-        #            for _, value in bindings:
-        #                recur(value)
-        #
-        #            local = dict.fromkeys([name for name, _ in bindings])
-        #            recur(body, context={**context, **local})
 
         case LetRec(bindings=bindings, body=body):
-            counts = Counter(name for name, expression in bindings)
+            counts = Counter(name for name, _ in bindings)
             duplicates = {name: count for name, count in counts.items() if count > 1}
             if duplicates:
                 raise ValueError(f"duplicate bindings: {duplicates}")
-            for expression, value in bindings:
+            for _, value in bindings:
                 recur(value)
-            local = dict.fromkeys([name for name, expression in bindings])
+            local = dict.fromkeys([name for name, _ in bindings])
             for name, value in bindings:
                 recur(value, context={**context, **local})
             check_term(body, {**context, **local})
 
-        #            counts = Counter(name for name, _ in bindings)
-        #            duplicates = {name: count for name, count in counts.items() if count > 1}
-        #            if duplicates:
-        #                raise ValueError(f"duplicate binders: {duplicates}")
-        #
-        #            local = dict.fromkeys([name for name, _ in bindings])#
-        #
-        #            for name, value in bindings:
-        #                recur(value, context={**context, **local})
 
-        #            check_term(body, {**context, **local})
 
         case Reference(name=name):
             if name not in context:
                 raise ValueError(f"unknown variable: {name}")
-        #            if name not in context:
-        #                raise ValueError(f"unknown variable: {name}")
 
         case Abstract(parameters=parameters, body=body):
             counts = Counter(parameters)
@@ -90,13 +68,6 @@ def check_term(
             local = dict.fromkeys(parameters, None)
             recur(body, context={**context, **local})
 
-        #            counts = Counter(parameters)
-        #            duplicates = {name for name, count in counts.items() if count > 1}
-        #            if duplicates:
-        #                raise ValueError(f"duplicate parameters: {duplicates}")
-        #
-        #            local = dict.fromkeys(parameters, None)
-        #            recur(body, context={**context, **local})
 
         case Apply(target=target, arguments=arguments):
             recur(target)
@@ -144,12 +115,3 @@ def check_program(
 
             local = dict.fromkeys(parameters, None)
             check_term(body, context=local)
-
-
-#            counts = Counter(parameters)
-#            duplicates = {name for name, count in counts.items() if count > 1}
-#            if duplicates:
-#                raise ValueError(f"duplicate parameters: {duplicates}")
-#
-#            local = dict.fromkeys(parameters, None)
-#            check_term(body, context=local)
