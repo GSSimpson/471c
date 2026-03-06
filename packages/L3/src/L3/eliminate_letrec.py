@@ -1,5 +1,5 @@
 # noqa: F841
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from functools import partial
 
 from L2 import syntax as L2
@@ -17,27 +17,42 @@ def eliminate_letrec_term(
 
     match term:
         case L3.Let(bindings=bindings, body=body):
-            pass
+            new_bindings: Sequence[tuple[L2.Identifier, L2.Term]] = [
+                tuple(binding[0], recur(binding[1], context)) for binding in bindings
+            ]
+
+            return L2.Let(bindings=new_bindings, body=recur(body))
 
         case L3.LetRec(bindings=bindings, body=body):
-            pass
+            if any(body in binding for binding in bindings):
+                for binding in bindings:
+                    recur(binding[1])
+            else:
+                new_bindings: Sequence[tuple[L2.Identifier, L2.Term]] = [
+                    tuple(binding[0], recur(binding[1], context)) for binding in bindings
+                ]
+                return L2.Let(bindings=new_bindings, body=recur(body))
 
         case L3.Reference(name=name):
+            if context == {}:
+                return L2.Load(base=recur(L3.Reference(name=name)), index=0)
+            else:
+                return L2.Reference(name=name)
+
             # if name is a recursive variable -> (Load (Reference name)))
             # else (Reference name)
-            pass
 
         case L3.Abstract(parameters=parameters, body=body):
-            pass
+            return L2.Abstract(parameters=parameters, body=recur(body))
 
         case L3.Apply(target=target, arguments=arguments):
-            pass
+            return L2.Apply(target=recur(target), arguments=[recur(argument) for argument in arguments])
 
         case L3.Immediate(value=value):
             return L2.Immediate(value=value)
 
         case L3.Primitive(operator=_operator, left=left, right=right):
-            pass
+            return L2.Primitive(operator=_operator, left=recur(left), right=recur(right))
 
         case L3.Branch(operator=operator, left=left, right=right, consequent=consequent, otherwise=otherwise):
             return L2.Branch(
@@ -58,10 +73,10 @@ def eliminate_letrec_term(
             )
 
         case L3.Store(base=base, index=_index, value=value):
-            pass
+            return L2.Store(base=recur(base), index=_index, value=recur(value))
 
         case L3.Begin(effects=effects, value=value):  # pragma: no branch
-            pass
+            return L2.Begin(effects=[recur(effect) for effect in effects], value=recur(value))
 
 
 def eliminate_letrec_program(
