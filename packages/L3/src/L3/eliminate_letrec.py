@@ -27,7 +27,6 @@ def eliminate_letrec_term(
             if any(body in binding for binding in bindings):
                 for binding in bindings:
                     recur(binding[1])
-                    pass
             else:
                 new_bindings: Sequence[tuple[L2.Identifier, L2.Term]] = [
                     tuple(binding[0], recur(binding[1], context)) for binding in bindings
