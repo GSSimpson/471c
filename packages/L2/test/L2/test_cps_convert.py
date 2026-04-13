@@ -1,11 +1,18 @@
+from collections.abc import Sequence
+
+import pytest
 from L1 import syntax as L1
 from L2 import syntax as L2
-from L2.cps_convert import cps_convert_program, cps_convert_term
+from L2.cps_convert import cps_convert_program, cps_convert_term, cps_convert_terms
 from util.sequential_name_generator import SequentialNameGenerator
 
 
 def k(v: L1.Identifier) -> L1.Statement:
     return L1.Halt(value=v)
+
+
+def k2(w: Sequence[L1.Identifier]) -> L1.Statement:
+    return L1.Halt(value=w[0])
 
 
 def test_cps_convert_term_name():
@@ -228,6 +235,35 @@ def test_cps_convert_term_begin():
 
     expected = L1.Halt(value="y")
     assert actual == expected
+
+
+# tests for cps_convert_terms cases
+def test_cps_convert_terms_empty():
+    fresh = SequentialNameGenerator()
+
+    actual = cps_convert_terms([], k2, fresh)
+
+    expected = k2(w=[])
+
+    assert actual == expected
+
+
+def test_cps_convert_terms_full():
+    terms = [L2.Immediate(value=1)]
+    fresh = SequentialNameGenerator()
+
+    actual = cps_convert_terms(terms, k2, fresh)
+
+    expected = cps_convert_term(terms[0], k, fresh)
+    assert actual == expected
+
+
+def test_cps_convert_terms_error():
+    terms = _
+    fresh = SequentialNameGenerator()
+
+    with pytest.raises(ValueError):
+        cps_convert_terms(terms, k2, fresh)
 
 
 def test_cps_convert_program():

@@ -3,12 +3,8 @@ from L3 import syntax as L3
 from L3.eliminate_letrec import Context, eliminate_letrec_program, eliminate_letrec_term
 
 
-<<<<<<< HEAD
 # Let
 def test_check_term_let():
-=======
-def test_eliminate_letrec_term_let():
->>>>>>> upstream/main
     term = L3.Let(
         bindings=[("x", L3.Reference(name="x"))],
         body=L3.Reference(name="y"),
@@ -87,7 +83,6 @@ def test_eliminate_letrec_term_abstract():
         body=L2.Reference(name="x"),
     )
 
-<<<<<<< HEAD
     actual = eliminate_letrec_term(term, context)
     assert actual == expected
 
@@ -235,15 +230,6 @@ def test_eliminate_letrec_program():
     program = L3.Program(
         parameters=[],
         body=L3.Immediate(value=0),
-=======
-    assert actual == expected
-
-
-def test_eliminate_letrec_term_apply():
-    term = L3.Apply(
-        target=L3.Reference(name="x"),
-        arguments=[],
->>>>>>> upstream/main
     )
 
     context: Context = {}
