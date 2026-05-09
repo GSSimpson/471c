@@ -95,17 +95,23 @@ def cps_convert_term(
                         operator=operator,
                         left=left,
                         right=right,
-                        then=_term(
-                            consequent, lambda consequent: L1.Apply(target=consequent, arguments=[])
-                        ),  # get back to this
+                        then=_term(consequent, lambda consequent: L1.Apply(
+                            target= consequent, 
+                            arguments=[]  # get back to this
+                        )),
                         otherwise=_term(otherwise, m),
                     ),
                 ),
             )
 
-        case L2.Allocate(count=count):  # reassess this later. it might be incorrect
+        case L2.Allocate(count=count): #reassess this later. it might be incorrect
             tmp = fresh("t")
-            return L1.Allocate(destination=tmp, count=count, then=m(tmp))
+            return L1.Allocate(
+                    destination=tmp, 
+                    count=count, 
+                    then=m(tmp)
+            )            
+
 
         case L2.Load(base=base, index=index):
             tmp = fresh("t")

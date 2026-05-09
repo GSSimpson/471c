@@ -37,6 +37,7 @@ IDENTIFIER  : /[a-zA-Z_][a-zA-Z0-9_]*/
 
 //new stuff
 
+
 reference   : "(" name ")"
 name        : IDENTIFIER
 
@@ -48,15 +49,15 @@ target      : term
 arguments   : term*
 
 immediate   : "(" value ")"
-value       : NUMBER
+value       : /[0-9]*///make from nat to int
 
 primitive   : "(" operator left right ")"
 operator    : "+"|"-"|"*"
 left        : term
 right       : term
 
-branch      : "(if ("operator left right")" consequent otherwise ")"
-//operator
+branch      : "(" "if" "("operator2 left right")" consequent otherwise ")"
+operator2   : "<"|"=="
 consequent  : term
 otherwise   : term
 
@@ -67,7 +68,7 @@ load        : "(" LOAD base index")"
 base        : term
 index       : /[0-9]*/
 
-store       : "(" STORE base index value2 ")" 
+store       : "(" STORE base index value2 ")" //look for workarounds against 'value2'
 value2      : term
 
 begin       : "(" BEGIN effects value2 ")"
@@ -78,4 +79,3 @@ ALLOCATE.2  : "allocate"
 LOAD.2      : "load"
 STORE.2     : "store"
 BEGIN.2     : "begin"
-NUMBER      : /-?(?:0|[1-9][0-9]*)/
